@@ -1,6 +1,6 @@
 # Compiler and flags
 CC      := gcc
-CFLAGS  := -Wall -Wextra -Iinclude -g
+CFLAGS  := -Wall -Wextra -Wimplicit-function-declaration -Iinclude -g
 LDFLAGS :=
 
 # Directories
@@ -10,7 +10,7 @@ OBJ_DIR := build
 BIN_DIR := bin
 
 # Target executable
-TARGET  := $(BIN_DIR)/app
+TARGET  := $(BIN_DIR)/krill
 
 # Automatically find all .c files in src/ and map them to obj/
 SRCS    := $(wildcard $(SRC_DIR)/*.c)

@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include "lsh.h"
 
 int main(void) {
-    printf("Hello World\n");
+    lsh_loop();
     return 0;
 }
