@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "split_line.h"
 
 #define LSH_TOK_BUFSIZE 64
