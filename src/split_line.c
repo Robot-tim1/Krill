@@ -12,14 +12,26 @@ char **lsh_split_line(char *line) {
     int token_position = 0, word_position = 0, line_position = 0;
     char **tokens = malloc(tokens_bufsize * sizeof(char *));
     char *token = NULL;
-    
+
+    int is_quoted = 0;
+
     if (!tokens) {
         fprintf(stderr, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
 
     while (line[line_position] != '\0') {
-        if (isspace(line[line_position])) {
+        if (line[line_position] == '"') {
+            if (is_quoted) {
+                is_quoted = 0;
+            } else {
+                is_quoted = 1;
+            }
+            line_position++;
+            continue;
+        }
+
+        if (isspace(line[line_position]) && !is_quoted) {
             if (token_position == 0) {
                 line_position++;
                 continue;
@@ -28,7 +40,7 @@ char **lsh_split_line(char *line) {
             token[token_position] = '\0';
             line_position++;
             token_position = 0;
-            
+
             tokens[word_position] = token;
             word_position++;
 
@@ -42,12 +54,12 @@ char **lsh_split_line(char *line) {
                 }
                 tokens = temp;
             }
-            
+
             token = NULL;
             token_bufsize = LSH_TOK_BUFSIZE;
             continue;
         }
-        
+
         if (!token) {
             token = malloc(token_bufsize);
             if (!token) {
@@ -77,6 +89,7 @@ char **lsh_split_line(char *line) {
         tokens[word_position] = token;
         word_position++;
     }
+
     tokens[word_position] = NULL;
     return tokens;
 }
