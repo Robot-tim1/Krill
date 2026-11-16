@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <pwd.h>
+#include <sys/types.h>
 #include "lsh.h"
 #include "split_line.h"
 
@@ -11,13 +13,37 @@
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
 
+
+#define HRED    "\e[0;91m"
+#define RED     "\e[0;31m"
+#define RESET   "\e[0m"
+
 void lsh_loop(void) {
     char *line;
     char **args;
     int status;
+    char hostname[256];
 
-    do {
-        printf("> ");
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        perror("gethostname() error");
+        return;
+    }
+
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+
+    if (pw == NULL) {
+        perror("getpwuid() error");
+        return;
+    }
+
+    do {  
+        char cwd[4096];
+        if (getcwd(cwd, sizeof(cwd)) == NULL) {
+            perror("getcwd() error");
+            return;
+        }
+        printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd, RESET);
         line = lsh_read_line();
         args = lsh_split_line(line);
         status = lsh_execute(args);
