@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <ctype.h>
 #include "lsh.h"
+#include "split_line.h"
 
 #define LSH_RL_BUFSIZE 1024
 
@@ -23,6 +23,9 @@ void lsh_loop(void) {
         status = lsh_execute(args);
 
         free(line);
+        for (int i = 0; args[i] != NULL; i++) {
+            free(args[i]);
+        }
         free(args);
     } while (status);
 }
@@ -60,86 +63,6 @@ char *lsh_read_line(void) {
     }
 }
 
-char **lsh_split_line(char *line) {
-    int tokens_bufsize = LSH_TOK_BUFSIZE;
-    int token_bufsize = LSH_TOK_BUFSIZE;
-    int token_position = 0, word_position = 0, line_position = 0;
-    char **tokens = malloc(tokens_bufsize * sizeof(char *));
-    
-    if (tokens == NULL) {
-        fprintf(stderr, "lsh: allocation error\n");
-        exit(EXIT_FAILURE);
-    }
-    
-    char *token = malloc(token_bufsize);
-
-    if (token == NULL) {
-        free(tokens);
-        fprintf(stderr, "lsh: allocation error\n");
-        exit(EXIT_FAILURE);
-    }
-
-    while (line[line_position] != '\0') {
-        if (isspace(line[line_position])) {
-            if (token_position == 0) {
-                line_position++;
-                continue;
-            }
-
-            token[token_position] = '\0';
-            line_position++;
-            token_position = 0;
-            
-            tokens[word_position] = token;
-            word_position++;
-
-            if (word_position + 1 >= tokens_bufsize) {
-                tokens_bufsize += LSH_TOK_BUFSIZE;
-                char **temp = realloc(tokens, tokens_bufsize * sizeof(char *));
-
-                if (!temp) {
-                    fprintf(stderr, "lsh: allocation error\n");
-                    exit(EXIT_FAILURE);
-                }
-                tokens = temp;
-            }
-            
-            char *temp = malloc(token_bufsize);
-            if (!temp) {
-                fprintf(stderr, "lsh: allocation error\n");
-                exit(EXIT_FAILURE);
-            }
-            token = temp;
-            continue;
-        }
-        
-        token[token_position] = line[line_position];
-        line_position++;
-        token_position++;
-
-        if (token_position >= token_bufsize) {
-            token_bufsize += LSH_TOK_BUFSIZE;
-            char *temp = realloc(token, token_bufsize);
-
-            if (!temp) {
-                fprintf(stderr, "lsh: allocation error\n");
-                exit(EXIT_FAILURE);
-            }
-            token = temp;
-        }
-    }
-
-    if (token_position != 0) {
-        token[token_position] = '\0';
-        tokens[word_position] = token;
-        tokens[word_position+1] = NULL;
-    } else {
-        free(token);
-        tokens[word_position] = NULL;
-    }
-    return tokens;
-}
-
 int lsh_launch(char **args) {
     pid_t pid;
     int status;
@@ -160,10 +83,6 @@ int lsh_launch(char **args) {
     
     return 1;
 }
-
-int lsh_cd(char **args);
-int lsh_help(char **args);
-int lsh_exit(char **args);
 
 char *builtin_str[] = {
   "cd",
