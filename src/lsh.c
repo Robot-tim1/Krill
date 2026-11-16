@@ -42,16 +42,17 @@ void lsh_loop(void) {
             return;
         }
         
+        char *cwd_to_print = cwd;
         if (strncmp(home, cwd, strlen(home)) == 0) {
             char new_cwd[MAX_PATH];
             memset(new_cwd, 0, sizeof(new_cwd));
+            
             new_cwd[0] = '~';
             strcat(new_cwd, cwd + strlen(home));
-
-            printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, new_cwd, RESET);
-        } else {
-            printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd, RESET);
+            
+            cwd_to_print = new_cwd;
         }
+        printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd_to_print, RESET);
         
         line = lsh_read_line();
         args = lsh_split_line(line);
