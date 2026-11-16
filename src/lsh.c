@@ -13,6 +13,7 @@
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
 
+#define MAX_PATH 4096
 
 #define HRED    "\e[0;91m"
 #define RED     "\e[0;31m"
@@ -38,7 +39,7 @@ void lsh_loop(void) {
     }
 
     do {  
-        char cwd[4096];
+        char cwd[MAX_PATH];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
             perror("getcwd() error");
             return;
