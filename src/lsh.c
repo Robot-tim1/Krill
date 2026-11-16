@@ -10,9 +10,6 @@
 
 #define LSH_RL_BUFSIZE 1024
 
-#define LSH_TOK_BUFSIZE 64
-#define LSH_TOK_DELIM " \t\r\n\a"
-
 #define MAX_PATH 4096
 
 #define HRED    "\e[0;91m"
