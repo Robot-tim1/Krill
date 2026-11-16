@@ -22,22 +22,21 @@ void lsh_loop(void) {
     char hostname[256];
 
     if (gethostname(hostname, sizeof(hostname)) != 0) {
-        perror("gethostname() error");
+        perror("lsh");
         return;
     }
 
-    uid_t uid = geteuid();
-    struct passwd *pw = getpwuid(uid);
+    struct passwd *pw = getpwuid(geteuid());
 
     if (pw == NULL) {
-        perror("getpwuid() error");
+        perror("lsh");
         return;
     }
 
     do {  
         char cwd[MAX_PATH];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            perror("getcwd() error");
+            perror("lsh");
             return;
         }
         printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd, RESET);

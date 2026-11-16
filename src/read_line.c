@@ -13,7 +13,7 @@ char *lsh_read_line(void) {
         if (feof(stdin)) {
             exit(EXIT_SUCCESS);
         } else {
-            perror("readline");
+            perror("lsh");
             exit(EXIT_FAILURE);
         }
     }
