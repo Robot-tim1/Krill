@@ -3,23 +3,29 @@
 #include <stdio.h>
 
 #include "split_line.h"
+#include "read_line.h"
 
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
 
 char **lsh_split_line(char *line) {
-    int tokens_bufsize = LSH_TOK_BUFSIZE;
-    int token_bufsize = LSH_TOK_BUFSIZE;
-    int token_position = 0, word_position = 0, line_position = 0;
-    char **tokens = malloc(tokens_bufsize * sizeof(char *));
-    char *token = NULL;
-
+    int line_position = 0;
     int is_quoted = 0;
+    char **tokens = malloc(LSH_TOK_BUFSIZE * sizeof(char *));
 
     if (!tokens) {
         fprintf(stderr, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
+
+    token_state_t state = {
+            .token = NULL,
+            .tokens = tokens,
+            .token_bufsize = LSH_TOK_BUFSIZE,
+            .tokens_bufsize = LSH_TOK_BUFSIZE,
+            .token_position = 0,
+            .word_position = 0,
+    };
 
     while (line[line_position] != '\0') {
         if (line[line_position] == '"') {
@@ -33,64 +39,72 @@ char **lsh_split_line(char *line) {
         }
 
         if (isspace(line[line_position]) && !is_quoted) {
-            if (token_position == 0) {
+            if (state.token_position == 0) {
                 line_position++;
                 continue;
             }
 
-            token[token_position] = '\0';
+            state.token[state.token_position] = '\0';
             line_position++;
-            token_position = 0;
+            state.token_position = 0;
 
-            tokens[word_position] = token;
-            word_position++;
+            state.tokens[state.word_position] = state.token;
+            state.word_position++;
 
-            if (word_position + 1 >= tokens_bufsize) {
-                tokens_bufsize += LSH_TOK_BUFSIZE;
-                char **temp = realloc(tokens, tokens_bufsize * sizeof(char *));
+            if (state.word_position + 1 >= state.tokens_bufsize) {
+                state.tokens_bufsize += LSH_TOK_BUFSIZE;
+                char **temp = realloc(state.tokens, state.tokens_bufsize * sizeof(char *));
 
                 if (!temp) {
                     fprintf(stderr, "lsh: allocation error\n");
                     exit(EXIT_FAILURE);
                 }
-                tokens = temp;
+                state.tokens = temp;
             }
 
-            token = NULL;
-            token_bufsize = LSH_TOK_BUFSIZE;
+            state.token = NULL;
+            state.token_bufsize = LSH_TOK_BUFSIZE;
             continue;
         }
 
-        if (!token) {
-            token = malloc(token_bufsize);
-            if (!token) {
+        if (!state.token) {
+            state.token = malloc(state.token_bufsize);
+            if (!state.token) {
                 fprintf(stderr, "lsh: allocation error\n");
                 exit(EXIT_FAILURE);
             }
         }
 
-        token[token_position] = line[line_position];
+        state.token[state.token_position] = line[line_position];
         line_position++;
-        token_position++;
+        state.token_position++;
 
-        if (token_position + 1 >= token_bufsize) {
-            token_bufsize += LSH_TOK_BUFSIZE;
-            char *temp = realloc(token, token_bufsize);
+        if (state.token_position + 1 >= state.token_bufsize) {
+            state.token_bufsize += LSH_TOK_BUFSIZE;
+            char *temp = realloc(state.token, state.token_bufsize);
 
             if (!temp) {
                 fprintf(stderr, "lsh: allocation error\n");
                 exit(EXIT_FAILURE);
             }
-            token = temp;
+            state.token = temp;
         }
     }
 
-    if (token) {
-        token[token_position] = '\0';
-        tokens[word_position] = token;
-        word_position++;
+    if (is_quoted) {
+        lsh_handle_quotes(state);
     }
 
-    tokens[word_position] = NULL;
-    return tokens;
+    if (state.token) {
+        state.token[state.token_position] = '\0';
+        state.tokens[state.word_position] = state.token;
+        state.word_position++;
+    }
+
+    state.tokens[state.word_position] = NULL;
+    return state.tokens;
+}
+
+void lsh_handle_quotes(token_state_t state) {
+    int is_quoted = 1;
 }
