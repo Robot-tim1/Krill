@@ -7,7 +7,7 @@
 
 #define LSH_TOK_BUFSIZE 64
 
-char **lsh_split_line(char *line) {
+char **lsh_split_line(const char *line) {
     char **tokens = malloc(LSH_TOK_BUFSIZE * sizeof(char *));
 
     if (!tokens) {
@@ -52,7 +52,7 @@ void lsh_handle_quotes(token_state_t *state) {
     }
 }
 
-void lsh_parse_line(token_state_t *state, char *line) {
+void lsh_parse_line(token_state_t *state, const char *line) {
     int line_position = 0;
 
     while (line[line_position] != '\0') {
