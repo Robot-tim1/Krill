@@ -34,10 +34,10 @@ char **lsh_split_line(char *line) {
     if (state.token) {
         state.token[state.token_position] = '\0';
         state.tokens[state.word_position] = state.token;
-        (state.word_position)++;
+        state.word_position++;
     }
 
-    state.tokens[(state.word_position)] = NULL;
+    state.tokens[state.word_position] = NULL;
     return state.tokens;
 }
 
