@@ -83,6 +83,9 @@ void lsh_loop(void) {
             continue;
         }
         args = lsh_split_line(line, &repl_state);
+        if (!args) {
+            continue;
+        }
         status = lsh_execute(args);
 
         free(line);
