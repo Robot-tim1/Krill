@@ -10,6 +10,8 @@ typedef struct TokenState {
     int tokens_bufsize;
 } token_state_t;
 
-char **lsh_split_line(const char *line);
+typedef struct ReplState repl_state_t;
+
+char **lsh_split_line(const char *line, repl_state_t *repl_state);
 void lsh_parse_line(token_state_t *state, const char *line);
-void lsh_handle_quotes(token_state_t *state);
+void lsh_handle_quotes(token_state_t *state, repl_state_t *repl_state);

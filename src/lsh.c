@@ -10,6 +10,8 @@
 #include "commands.h"
 #include "read_line.h"
 
+#define _GNU_SOURCE
+
 #define MAX_PATH 4096
 
 #define HRED    "\e[0;91m"
@@ -30,10 +32,27 @@ void lsh_loop(void) {
 
     struct passwd *pw = getpwuid(geteuid());
 
-    if (pw == NULL) {
+    if (!pw) {
         perror("lsh");
         return;
     }
+
+    char **history = malloc(512 * sizeof(char *));
+
+    if (!history) {
+        perror("lsh");
+        return;
+    }
+
+    repl_state_t repl_state = {
+        .history = history,
+        .current_line = NULL,
+        .saved_line = NULL,
+        .yanked_line = NULL,
+        .prompt = NULL,
+        .line_position = -1,
+        .history_position = -1
+    };
 
     do {  
         char cwd[MAX_PATH];
@@ -52,10 +71,18 @@ void lsh_loop(void) {
             
             cwd_to_print = new_cwd;
         }
-        printf("%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd_to_print, RESET);
+        if (asprintf(&repl_state.prompt, "%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd_to_print, RESET) == -1) {
+            perror("lsh");
+            return;
+        }
+        fputs(repl_state.prompt, stdout);
+        fflush(stdout);
         
-        line = lsh_read_line();
-        args = lsh_split_line(line);
+        line = lsh_read_line(&repl_state);
+        if (!line) {
+            return;
+        }
+        args = lsh_split_line(line, &repl_state);
         status = lsh_execute(args);
 
         free(line);
@@ -63,5 +90,7 @@ void lsh_loop(void) {
             free(args[i]);
         }
         free(args);
+        free(repl_state.prompt);
+        repl_state.prompt = NULL;
     } while (status);
 }
