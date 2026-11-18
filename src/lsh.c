@@ -75,8 +75,6 @@ void lsh_loop(void) {
             perror("lsh");
             return;
         }
-        fputs(repl_state.prompt, stdout);
-        fflush(stdout);
         
         line = lsh_read_line(&repl_state);
         if (!line) {

@@ -43,13 +43,16 @@ char **lsh_split_line(const char *line, repl_state_t *repl_state) {
 
 void lsh_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
+    char *temp = repl_state->prompt;
+    repl_state->prompt = "> ";
 
     while (state->is_quoted) {
-        printf("> ");
         line = lsh_read_line(repl_state);
         lsh_parse_line(state, line);
         free(line);
     }
+
+    repl_state->prompt = temp;
 }
 
 void lsh_parse_line(token_state_t *state, const char *line) {

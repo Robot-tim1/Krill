@@ -25,6 +25,8 @@ char *lsh_read_line(repl_state_t *state) {
     char c;
     char seq[3];
 
+    fputs(state->prompt, stdout);
+    fflush(stdout);
     while (1) {
         while (read(STDIN_FILENO, &c, 1) != 1);
 
