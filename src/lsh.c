@@ -80,10 +80,15 @@ void lsh_loop(void) {
         
         line = lsh_read_line(&repl_state);
         if (!line) {
+            free(repl_state.prompt);
+            repl_state.prompt = NULL;
             continue;
         }
         args = lsh_split_line(line, &repl_state);
         if (!args) {
+            free(line);
+            free(repl_state.prompt);
+            repl_state.prompt = NULL;
             continue;
         }
         status = lsh_execute(args);
