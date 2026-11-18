@@ -21,7 +21,7 @@
 void lsh_loop(void) {
     char *line;
     char **args;
-    int status;
+    int status = 1;
     char hostname[256];
     char *home = getenv("HOME");
 
@@ -80,7 +80,7 @@ void lsh_loop(void) {
         
         line = lsh_read_line(&repl_state);
         if (!line) {
-            return;
+            continue;
         }
         args = lsh_split_line(line, &repl_state);
         status = lsh_execute(args);

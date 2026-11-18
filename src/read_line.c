@@ -13,8 +13,8 @@ char *lsh_read_line(repl_state_t *state) {
     char *line = calloc(LSH_RL_BUFSIZE, sizeof(char));
 
     if (!line) {
-        fprintf(stderr, "lsh: allocation error\n");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "\nlsh: allocation error\n");
+        return NULL;
     }
     
     state->current_line = line;
@@ -40,7 +40,7 @@ char *lsh_read_line(repl_state_t *state) {
             puts("^C");
             disable_raw_mode();
             free(state->current_line);
-            return NULL;
+            exit(EXIT_SUCCESS);
         case '\n':
         case '\r':
             disable_raw_mode();

@@ -12,7 +12,7 @@ char **lsh_split_line(const char *line, repl_state_t *repl_state) {
 
     if (!tokens) {
         fprintf(stderr, "lsh: allocation error\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     token_state_t state = {
