@@ -44,6 +44,8 @@ void lsh_loop(void) {
         return;
     }
 
+    history[0] = NULL;
+
     repl_state_t repl_state = {
         .history = history,
         .current_line = NULL,
@@ -51,7 +53,7 @@ void lsh_loop(void) {
         .yanked_line = NULL,
         .prompt = NULL,
         .line_position = -1,
-        .history_position = -1
+        .history_position = 0
     };
 
     do {  
