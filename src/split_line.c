@@ -22,12 +22,13 @@ char **lsh_split_line(const char *line, repl_state_t *repl_state) {
             .tokens_bufsize = LSH_TOK_BUFSIZE,
             .token_position = 0,
             .word_position = 0,
-            .is_quoted = 0
+            .is_double_quoted = 0,
+            .is_single_quoted = 0
     };
 
     lsh_parse_line(&state, line);
 
-    if (state.is_quoted) {
+    if (state.is_double_quoted || state.is_single_quoted) {
         lsh_handle_quotes(&state, repl_state);
     }
 
@@ -46,7 +47,7 @@ void lsh_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *temp = repl_state->prompt;
     repl_state->prompt = "> ";
 
-    while (state->is_quoted) {
+    while (state->is_double_quoted || state->is_single_quoted) {
         line = lsh_read_line(repl_state);
         lsh_parse_line(state, line);
         free(line);
@@ -59,17 +60,28 @@ void lsh_parse_line(token_state_t *state, const char *line) {
     int line_position = 0;
 
     while (line[line_position] != '\0') {
-        if (line[line_position] == '"') {
-            if (state->is_quoted) {
-                state->is_quoted = 0;
+        if (line[line_position] == '"' && !state->is_single_quoted) {
+            if (state->is_double_quoted) {
+                state->is_double_quoted = 0;
             } else {
-                state->is_quoted = 1;
+                state->is_double_quoted = 1;
             }
             line_position++;
             continue;
         }
 
-        if (isspace(line[line_position]) && !state->is_quoted) {
+        // 39 is single quote ASCII number
+        if (line[line_position] == 39 && !state->is_double_quoted) {
+            if (state->is_single_quoted) {
+                state->is_single_quoted = 0;
+            } else {
+                state->is_single_quoted = 1;
+            }
+            line_position++;
+            continue;
+        }
+
+        if (isspace(line[line_position]) && !state->is_double_quoted && !state->is_single_quoted) {
             if (state->token_position == 0) {
                 line_position++;
                 continue;

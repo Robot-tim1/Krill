@@ -5,7 +5,8 @@ typedef struct TokenState {
     char **tokens;
     int word_position;
     int token_position;
-    int is_quoted;
+    int is_double_quoted;
+    int is_single_quoted;
     int token_bufsize;
     int tokens_bufsize;
 } token_state_t;
