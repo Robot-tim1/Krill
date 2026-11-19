@@ -98,7 +98,6 @@ char *lsh_read_line(repl_state_t *state) {
         case '\r':
             disable_raw_mode();
             fputs("\n", stdout);
-            state->line_position++;
             
             if (strlen(state->current_line) != 0) {
                 while (state->history[state->history_position] != NULL) {
@@ -110,6 +109,7 @@ char *lsh_read_line(repl_state_t *state) {
                 state->history[state->history_position] = NULL;
             }
             
+            state->line_position++;
             state->current_line[state->line_position] = '\n';
             state->current_line[state->line_position + 1] = '\0';
             free(state->saved_line);
