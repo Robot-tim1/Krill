@@ -17,7 +17,7 @@ char *lsh_read_line(repl_state_t *state) {
         return NULL;
     }
 
-    char *saved_line = calloc(LSH_RL_BUFSIZE, sizeof(char));
+    char *saved_line = malloc(LSH_RL_BUFSIZE);
 
     if (!saved_line) {
         fprintf(stderr, "\nlsh: allocation error\n");
@@ -75,7 +75,7 @@ char *lsh_read_line(repl_state_t *state) {
                         state->history_position++;
                         strcpy(state->current_line, state->saved_line);
                         
-                        state->line_position = strlen(state->saved_line) - 1;
+                        state->line_position = (int)strlen(state->saved_line) - 1;
                         line_size = strlen(state->current_line) + 2;  
                     }
                     
