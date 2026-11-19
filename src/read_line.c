@@ -82,6 +82,20 @@ char *lsh_read_line(repl_state_t *state) {
                     printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
                     fflush(stdout);
                     break;
+                case 'C':
+                    if (state->current_line[state->line_position+1] != '\0') {
+                        state->line_position++;
+                        fputs("\x1b[C", stdout);
+                        fflush(stdout);
+                    }
+                    break;
+                case 'D':
+                    if (state->line_position != -1) {
+                        state->line_position--;
+                        fputs("\x1b[D", stdout);
+                        fflush(stdout);
+                    }
+                    break;
                 }
             }
             break;
@@ -109,7 +123,7 @@ char *lsh_read_line(repl_state_t *state) {
                 state->history[state->history_position] = NULL;
             }
             
-            state->line_position++;
+            state->line_position = line_size - 2;
             state->current_line[state->line_position] = '\n';
             state->current_line[state->line_position + 1] = '\0';
             free(state->saved_line);
@@ -119,22 +133,31 @@ char *lsh_read_line(repl_state_t *state) {
         case '\x7f':
         case '\x08':
             if (strlen(state->current_line) > 0 && state->line_position != -1) {
-                state->current_line[state->line_position] = '\0';
+                line_size--;
+                
+                memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
                 state->line_position--;
-                line_size = strlen(state->current_line);
                 
                 printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+                if (state->line_position != (int)strlen(state->current_line)-1) {
+			        printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
+		        }
                 fflush(stdout);
             }
             break;
         default:
             if (c >= 32 && c <= 126 && line_size < LSH_RL_BUFSIZE) {
                 state->line_position++;
+                line_size++;
+                
+                memmove(state->current_line + state->line_position + 1, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
                 state->current_line[state->line_position] = c;
-                state->current_line[state->line_position+1] = '\0';
-                line_size = strlen(state->current_line);
+                state->current_line[line_size-2] = '\0';
                 
                 printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+                if (state->line_position != (int)strlen(state->current_line)-1) {
+			        printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
+		        }
                 fflush(stdout);
             }
             break;
