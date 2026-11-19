@@ -117,7 +117,7 @@ char *lsh_read_line(repl_state_t *state) {
                 while (state->history[state->history_position] != NULL) {
                     state->history_position++;
                 }
-                state->history[state->history_position] = calloc(strlen(state->current_line) + 1, sizeof(char));
+                state->history[state->history_position] = malloc(strlen(state->current_line) + 1);
                 strcpy(state->history[state->history_position], state->current_line);
                 state->history_position++;
                 state->history[state->history_position] = NULL;
