@@ -108,6 +108,10 @@ char *lsh_read_line(repl_state_t *state) {
             state->saved_line = NULL;
             
             exit(EXIT_SUCCESS);
+        case '\f':
+            printf("\033[H\033[2J%s%s", state->prompt, state->current_line);
+            fflush(stdout);
+            break;
         case '\n':
         case '\r':
             disable_raw_mode();
