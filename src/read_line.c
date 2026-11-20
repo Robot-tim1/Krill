@@ -120,7 +120,7 @@ void handle_key_input(repl_state_t *state, char c) {
 }
 
 void handle_backspace(repl_state_t *state) {
-    if (strlen(state->current_line) > 0 && state->line_position != -1) {
+    if (state->line_position != -1 && state->current_line[0] != '\0') {
         state->line_size--;
 
         memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
