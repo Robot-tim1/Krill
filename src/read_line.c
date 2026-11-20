@@ -56,10 +56,10 @@ char *lsh_read_line(repl_state_t *state) {
                     handle_down_arrow(state);
                     break;
                 case 'C':
-                    handle_left_arrow(state);
+                    handle_right_arrow(state);    
                     break;
                 case 'D':
-                    handle_right_arrow(state);
+                    handle_left_arrow(state);
                     break;
                 }
             }
@@ -93,6 +93,18 @@ char *lsh_read_line(repl_state_t *state) {
     }
 }
 
+void redraw_line(repl_state_t *state) {
+    printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+    fflush(stdout);
+}
+
+void reposition_cursor(repl_state_t *state) {
+    if (state->line_position != (int)strlen(state->current_line)-1) {
+        printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
+    }
+    fflush(stdout);
+}
+
 void handle_key_input(repl_state_t *state, char c) {
     if (c >= 32 && c <= 126 && state->line_size < LSH_RL_BUFSIZE) {
         state->line_position++;
@@ -102,11 +114,8 @@ void handle_key_input(repl_state_t *state, char c) {
         state->current_line[state->line_position] = c;
         state->current_line[state->line_size-2] = '\0';
 
-        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-        if (state->line_position != (int)strlen(state->current_line)-1) {
-		    printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
-		}
-        fflush(stdout);
+        redraw_line(state);
+        reposition_cursor(state);
     }
 }
 
@@ -117,11 +126,8 @@ void handle_backspace(repl_state_t *state) {
         memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
         state->line_position--;
 
-        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-        if (state->line_position != (int)strlen(state->current_line)-1) {
-			printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
-		}
-        fflush(stdout);
+        redraw_line(state);
+        reposition_cursor(state);
     }
 }
 
@@ -157,8 +163,7 @@ void handle_up_arrow(repl_state_t *state) {
         state->line_position = strlen(state->history[state->history_position]) - 1;
         state->line_size = strlen(state->current_line) + 2;
 
-        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-        fflush(stdout);
+        redraw_line(state);
     }
 }
 
@@ -177,11 +182,10 @@ void handle_down_arrow(repl_state_t *state) {
         state->line_size = strlen(state->current_line) + 2;  
     }
 
-    printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-    fflush(stdout);
+    redraw_line(state);
 }
 
-void handle_left_arrow(repl_state_t *state) {
+void handle_right_arrow(repl_state_t *state) {
     if (state->current_line[state->line_position+1] != '\0') {
         state->line_position++;
         fputs("\x1b[C", stdout);
@@ -189,7 +193,7 @@ void handle_left_arrow(repl_state_t *state) {
     }
 }
 
-void handle_right_arrow(repl_state_t *state) {
+void handle_left_arrow(repl_state_t *state) {
     if (state->line_position != -1) {
         state->line_position--;
         fputs("\x1b[D", stdout);

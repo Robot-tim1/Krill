@@ -19,3 +19,5 @@ void handle_up_arrow(repl_state_t *state);
 void handle_down_arrow(repl_state_t *state);
 void handle_left_arrow(repl_state_t *state);
 void handle_right_arrow(repl_state_t *state);
+void redraw_line(repl_state_t *state);
+void reposition_cursor(repl_state_t *state);
