@@ -8,6 +8,14 @@ typedef struct ReplState {
     char *prompt;
     int line_position;
     int history_position;
+    int line_size;
 } repl_state_t;
 
 char *lsh_read_line(repl_state_t *state);
+void handle_key_input(repl_state_t *state, char c);
+void handle_backspace(repl_state_t *state);
+char *handle_enter(repl_state_t *state);
+void handle_up_arrow(repl_state_t *state);
+void handle_down_arrow(repl_state_t *state);
+void handle_left_arrow(repl_state_t *state);
+void handle_right_arrow(repl_state_t *state);

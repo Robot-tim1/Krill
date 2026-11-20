@@ -53,7 +53,8 @@ void lsh_loop(void) {
         .yanked_line = NULL,
         .prompt = NULL,
         .line_position = -1,
-        .history_position = 0
+        .history_position = 0,
+        .line_size = 0
     };
 
     do {  

@@ -28,7 +28,7 @@ char *lsh_read_line(repl_state_t *state) {
     state->current_line = line;
     state->line_position = -1;
     state->saved_line = saved_line;
-    int line_size = 2;
+    state->line_size = 2;
 
     enable_raw_mode();
     char c;
@@ -50,51 +50,16 @@ char *lsh_read_line(repl_state_t *state) {
                 switch (seq[1])
                 {
                 case 'A':
-                    if (state->history_position != 0) {
-                        if (state->history[state->history_position] == NULL) {
-                            strcpy(state->saved_line, state->current_line);
-                        }
-                        
-                        state->history_position--;
-                        strcpy(state->current_line, state->history[state->history_position]);
-                        state->line_position = strlen(state->history[state->history_position]) - 1;
-                        line_size = strlen(state->current_line) + 2;
-                        
-                        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-                        fflush(stdout);
-                    }
+                    handle_up_arrow(state);
                     break;
                 case 'B':
-                    if (state->history[state->history_position + 1] != NULL && state->history[state->history_position] != NULL) {
-                        state->history_position++;
-                        strcpy(state->current_line, state->history[state->history_position]);
-                        
-                        state->line_position = strlen(state->history[state->history_position]) - 1;
-                        line_size = strlen(state->current_line) + 2;
-                    } else if (state->history[state->history_position + 1] == NULL && state->history[state->history_position] != NULL) {
-                        state->history_position++;
-                        strcpy(state->current_line, state->saved_line);
-                        
-                        state->line_position = (int)strlen(state->saved_line) - 1;
-                        line_size = strlen(state->current_line) + 2;  
-                    }
-                    
-                    printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-                    fflush(stdout);
+                    handle_down_arrow(state);
                     break;
                 case 'C':
-                    if (state->current_line[state->line_position+1] != '\0') {
-                        state->line_position++;
-                        fputs("\x1b[C", stdout);
-                        fflush(stdout);
-                    }
+                    handle_left_arrow(state);
                     break;
                 case 'D':
-                    if (state->line_position != -1) {
-                        state->line_position--;
-                        fputs("\x1b[D", stdout);
-                        fflush(stdout);
-                    }
+                    handle_right_arrow(state);
                     break;
                 }
             }
@@ -115,57 +80,119 @@ char *lsh_read_line(repl_state_t *state) {
         case '\n':
         case '\r':
             disable_raw_mode();
-            fputs("\n", stdout);
-            
-            while (state->history[state->history_position] != NULL) {
-                state->history_position++;
-            }
-
-            if (strlen(state->current_line) != 0 && (!state->history_position || strcmp(state->history[state->history_position-1], state->current_line) != 0)) {
-                state->history[state->history_position] = malloc(strlen(state->current_line) + 1);
-                strcpy(state->history[state->history_position], state->current_line);
-                state->history_position++;
-                state->history[state->history_position] = NULL;
-            }
-            
-            state->line_position = line_size - 2;
-            state->current_line[state->line_position] = '\n';
-            state->current_line[state->line_position + 1] = '\0';
-            free(state->saved_line);
-            state->saved_line = NULL;
-            
-            return state->current_line;
+            fputs("\n", stdout); 
+            return handle_enter(state);
         case '\x7f':
         case '\x08':
-            if (strlen(state->current_line) > 0 && state->line_position != -1) {
-                line_size--;
-                
-                memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
-                state->line_position--;
-                
-                printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-                if (state->line_position != (int)strlen(state->current_line)-1) {
-			        printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
-		        }
-                fflush(stdout);
-            }
+            handle_backspace(state);
             break;
         default:
-            if (c >= 32 && c <= 126 && line_size < LSH_RL_BUFSIZE) {
-                state->line_position++;
-                line_size++;
-                
-                memmove(state->current_line + state->line_position + 1, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
-                state->current_line[state->line_position] = c;
-                state->current_line[line_size-2] = '\0';
-                
-                printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
-                if (state->line_position != (int)strlen(state->current_line)-1) {
-			        printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
-		        }
-                fflush(stdout);
-            }
+            handle_key_input(state, c);
             break;
         }
+    }
+}
+
+void handle_key_input(repl_state_t *state, char c) {
+    if (c >= 32 && c <= 126 && state->line_size < LSH_RL_BUFSIZE) {
+        state->line_position++;
+        state->line_size++;
+
+        memmove(state->current_line + state->line_position + 1, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
+        state->current_line[state->line_position] = c;
+        state->current_line[state->line_size-2] = '\0';
+
+        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+        if (state->line_position != (int)strlen(state->current_line)-1) {
+		    printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
+		}
+        fflush(stdout);
+    }
+}
+
+void handle_backspace(repl_state_t *state) {
+    if (strlen(state->current_line) > 0 && state->line_position != -1) {
+        state->line_size--;
+
+        memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
+        state->line_position--;
+
+        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+        if (state->line_position != (int)strlen(state->current_line)-1) {
+			printf("\x1b[%dD", ((int)strlen(state->current_line)-1)-state->line_position);
+		}
+        fflush(stdout);
+    }
+}
+
+char *handle_enter(repl_state_t *state) {
+    while (state->history[state->history_position] != NULL) {
+        state->history_position++;
+    }
+
+    if (strlen(state->current_line) != 0 && (!state->history_position || strcmp(state->history[state->history_position-1], state->current_line) != 0)) {
+        state->history[state->history_position] = malloc(strlen(state->current_line) + 1);
+        strcpy(state->history[state->history_position], state->current_line);
+        state->history_position++;
+        state->history[state->history_position] = NULL;
+    }
+
+    state->line_position = state->line_size - 2;
+    state->current_line[state->line_position] = '\n';
+    state->current_line[state->line_position + 1] = '\0';
+    free(state->saved_line);
+    state->saved_line = NULL;
+            
+    return state->current_line;
+}
+
+void handle_up_arrow(repl_state_t *state) {
+    if (state->history_position != 0) {
+        if (state->history[state->history_position] == NULL) {
+            strcpy(state->saved_line, state->current_line);
+        }
+
+        state->history_position--;
+        strcpy(state->current_line, state->history[state->history_position]);
+        state->line_position = strlen(state->history[state->history_position]) - 1;
+        state->line_size = strlen(state->current_line) + 2;
+
+        printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+        fflush(stdout);
+    }
+}
+
+void handle_down_arrow(repl_state_t *state) {
+    if (state->history[state->history_position + 1] != NULL && state->history[state->history_position] != NULL) {
+        state->history_position++;
+        strcpy(state->current_line, state->history[state->history_position]);
+
+        state->line_position = strlen(state->history[state->history_position]) - 1;
+        state->line_size = strlen(state->current_line) + 2;
+    } else if (state->history[state->history_position + 1] == NULL && state->history[state->history_position] != NULL) {
+        state->history_position++;
+        strcpy(state->current_line, state->saved_line);
+
+        state->line_position = (int)strlen(state->saved_line) - 1;
+        state->line_size = strlen(state->current_line) + 2;  
+    }
+
+    printf("%s%s%s", CLEAR_LINE, state->prompt, state->current_line);
+    fflush(stdout);
+}
+
+void handle_left_arrow(repl_state_t *state) {
+    if (state->current_line[state->line_position+1] != '\0') {
+        state->line_position++;
+        fputs("\x1b[C", stdout);
+        fflush(stdout);
+    }
+}
+
+void handle_right_arrow(repl_state_t *state) {
+    if (state->line_position != -1) {
+        state->line_position--;
+        fputs("\x1b[D", stdout);
+        fflush(stdout);
     }
 }
