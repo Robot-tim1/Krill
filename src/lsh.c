@@ -54,7 +54,7 @@ void lsh_loop(void) {
         .prompt = NULL,
         .line_position = -1,
         .history_position = 0,
-        .line_size = 0
+        .line_length = 0
     };
 
     do {  

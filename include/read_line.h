@@ -8,7 +8,7 @@ typedef struct ReplState {
     char *prompt;
     int line_position;
     int history_position;
-    int line_size;
+    int line_length;
 } repl_state_t;
 
 char *lsh_read_line(repl_state_t *state);

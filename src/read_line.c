@@ -28,7 +28,7 @@ char *lsh_read_line(repl_state_t *state) {
     state->current_line = line;
     state->line_position = -1;
     state->saved_line = saved_line;
-    state->line_size = 0;
+    state->line_length = 0;
 
     enable_raw_mode();
     char c;
@@ -99,20 +99,20 @@ void redraw_line(repl_state_t *state) {
 }
 
 void reposition_cursor(repl_state_t *state) {
-    if (state->line_position != state->line_size - 1) {
-        printf("\x1b[%dD", state->line_size - state->line_position - 1);
+    if (state->line_position != state->line_length - 1) {
+        printf("\x1b[%dD", state->line_length - state->line_position - 1);
     }
     fflush(stdout);
 }
 
 void handle_key_input(repl_state_t *state, char c) {
-    if (c >= 32 && c <= 126 && state->line_size + 2 < LSH_RL_BUFSIZE) {
+    if (c >= 32 && c <= 126 && state->line_length + 2 < LSH_RL_BUFSIZE) {
         state->line_position++;
-        state->line_size++;
+        state->line_length++;
 
         memmove(state->current_line + state->line_position + 1, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
         state->current_line[state->line_position] = c;
-        state->current_line[state->line_size] = '\0';
+        state->current_line[state->line_length] = '\0';
 
         redraw_line(state);
         reposition_cursor(state);
@@ -121,7 +121,7 @@ void handle_key_input(repl_state_t *state, char c) {
 
 void handle_backspace(repl_state_t *state) {
     if (state->line_position != -1 && state->current_line[0] != '\0') {
-        state->line_size--;
+        state->line_length--;
 
         memmove(state->current_line + state->line_position, state->current_line + state->line_position + 1, strlen(state->current_line) - state->line_position);
         state->line_position--;
@@ -143,7 +143,7 @@ char *handle_enter(repl_state_t *state) {
         state->history[state->history_position] = NULL;
     }
 
-    state->line_position = state->line_size;
+    state->line_position = state->line_length;
     state->current_line[state->line_position] = '\n';
     state->current_line[state->line_position + 1] = '\0';
     free(state->saved_line);
@@ -161,7 +161,7 @@ void handle_up_arrow(repl_state_t *state) {
         state->history_position--;
         strcpy(state->current_line, state->history[state->history_position]);
         state->line_position = strlen(state->history[state->history_position]) - 1;
-        state->line_size = strlen(state->current_line);
+        state->line_length = strlen(state->current_line);
 
         redraw_line(state);
     }
@@ -173,13 +173,13 @@ void handle_down_arrow(repl_state_t *state) {
         strcpy(state->current_line, state->history[state->history_position]);
 
         state->line_position = strlen(state->history[state->history_position]) - 1;
-        state->line_size = strlen(state->current_line);
+        state->line_length = strlen(state->current_line);
     } else if (state->history[state->history_position + 1] == NULL && state->history[state->history_position] != NULL) {
         state->history_position++;
         strcpy(state->current_line, state->saved_line);
 
         state->line_position = (int)strlen(state->saved_line) - 1;
-        state->line_size = strlen(state->current_line);  
+        state->line_length = strlen(state->current_line);  
     }
 
     redraw_line(state);
