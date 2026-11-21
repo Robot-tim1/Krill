@@ -1,7 +1,7 @@
 #pragma once
 
 typedef struct Queue {
-    char **data;
+    char **buffer;
     char **head;
     char **tail;
     int size;

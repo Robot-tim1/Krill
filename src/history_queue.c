@@ -9,14 +9,14 @@ queue_t *create_queue(int cap) {
         return NULL;
     }
 
-    queue->data = malloc(cap * sizeof(char *));
+    queue->buffer = malloc(cap * sizeof(char *));
 
-    if (!queue->data) {
+    if (!queue->buffer) {
         return NULL;
     }
 
-    queue->tail = queue->data;
-    queue->head = queue->data;
+    queue->tail = queue->buffer;
+    queue->head = queue->buffer;
     queue->capacity = cap;
     queue->size = 0;
 
