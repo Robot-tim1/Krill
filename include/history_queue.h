@@ -8,4 +8,4 @@ typedef struct Queue {
     int capacity;
 } queue_t;
 
-queue_t *create_queue(int size);
+queue_t *create_queue(int cap);
