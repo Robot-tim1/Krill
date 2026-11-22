@@ -47,9 +47,7 @@ int enqueue(queue_t *queue, char *value) {
     char *temp = malloc(strlen(value) + 1);
 
     if (!temp) {
-        if (queue->head != queue->buffer) {
-            queue->head--;
-        }
+        queue->head--;
         if (was_incremented) {
             queue->size--;
         }
@@ -60,7 +58,7 @@ int enqueue(queue_t *queue, char *value) {
         queue->head = queue->buffer;
     }
 
-    if (queue->size == queue->capacity && !was_incremented) {
+    if (!was_incremented) {
         free(*queue->head);
     }
     *queue->head = temp;
