@@ -1,7 +1,9 @@
 #pragma once
 
+typedef struct Queue queue_t;
+
 typedef struct ReplState {
-    char **history;
+    queue_t *history;
     char *current_line;
     char *saved_line;
     char *yanked_line;

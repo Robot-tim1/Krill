@@ -9,6 +9,7 @@
 #include "split_line.h"
 #include "commands.h"
 #include "read_line.h"
+#include "history_queue.h"
 
 #define _GNU_SOURCE
 
@@ -37,14 +38,12 @@ void lsh_loop(void) {
         return;
     }
 
-    char **history = malloc(512 * sizeof(char *));
+    queue_t *history = create_queue(1024);
 
     if (!history) {
         perror("lsh");
         return;
     }
-
-    history[0] = NULL;
 
     repl_state_t repl_state = {
         .history = history,
@@ -53,7 +52,7 @@ void lsh_loop(void) {
         .yanked_line = NULL,
         .prompt = NULL,
         .line_position = -1,
-        .history_position = 0,
+        .history_position = -1,
         .line_length = 0
     };
 

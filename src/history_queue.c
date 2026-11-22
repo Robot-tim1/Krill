@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "history_queue.h"
 
@@ -15,7 +17,6 @@ queue_t *create_queue(int cap) {
         return NULL;
     }
 
-    queue->tail = queue->buffer;
     queue->head = queue->buffer;
     queue->capacity = cap;
     queue->size = 0;
@@ -23,38 +24,39 @@ queue_t *create_queue(int cap) {
     return queue;
 }
 
-void enqueue(queue_t *queue, char *value) {
+int enqueue(queue_t *queue, char *value) {
     if (queue->size == 0) {
-        *queue->head = value;
+        *queue->head = malloc(strlen(value) + 1);
+        if (!*queue->head) {
+            return 0;
+        }
+
+        strcpy(*queue->head, value);
         queue->size++;
-        return;
+        return 1;
     }
 
     queue->head++;
-    if (queue->size != queue->capacity) {
-        queue->size++;
-    }
 
     if (queue->buffer + queue->capacity == queue->head) {
         queue->head = queue->buffer;
     }
 
-    *queue->head = value;
+    *queue->head = malloc(strlen(value) + 1);
 
-    if (queue->tail == queue->head) {
-        queue->tail++;
+    if (!*queue->head) {
+        return 0;
     }
 
-    if (queue->buffer + queue->capacity == queue->tail) {
-        queue->tail = queue->buffer;
+    strcpy(*queue->head, value);
+    if (queue->size != queue->capacity) {
+        queue->size++;
     }
+
+    return 1;
 }
 
-char *queue_get(queue_t *queue, int index) {
-    if (!queue->size || index >= queue->size) {
-        return NULL;
-    }
-
+char *queue_get(queue_t *queue, int index) { 
     if (queue->head - index >= queue->buffer) {
         return *(queue->head - index);
     }

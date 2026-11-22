@@ -5,6 +5,7 @@
 
 #include "read_line.h"
 #include "terminal_mode.h"
+#include "history_queue.h"
 
 #define LSH_RL_BUFSIZE 4096
 #define CLEAR_LINE "\x1b[2K\r"
@@ -27,6 +28,7 @@ char *lsh_read_line(repl_state_t *state) {
     
     state->current_line = line;
     state->line_position = -1;
+    state->history_position = -1;
     state->saved_line = saved_line;
     state->line_length = 0;
 
@@ -132,15 +134,10 @@ void handle_backspace(repl_state_t *state) {
 }
 
 char *handle_enter(repl_state_t *state) {
-    while (state->history[state->history_position] != NULL) {
-        state->history_position++;
-    }
-
-    if (strlen(state->current_line) != 0 && (!state->history_position || strcmp(state->history[state->history_position-1], state->current_line) != 0)) {
-        state->history[state->history_position] = malloc(strlen(state->current_line) + 1);
-        strcpy(state->history[state->history_position], state->current_line);
-        state->history_position++;
-        state->history[state->history_position] = NULL;
+    if (strlen(state->current_line) != 0 && (!state->history->size || strcmp(queue_get(state->history, 0), state->current_line) != 0)) {
+        if (enqueue(state->history, state->current_line) == 0) {
+            return NULL;
+        }
     }
 
     state->line_position = state->line_length;
@@ -153,36 +150,37 @@ char *handle_enter(repl_state_t *state) {
 }
 
 void handle_up_arrow(repl_state_t *state) {
-    if (state->history_position != 0) {
-        if (state->history[state->history_position] == NULL) {
+    if (state->history->size && state->history_position < state->history->size - 1) {
+        if (state->history_position == -1) {
             strcpy(state->saved_line, state->current_line);
         }
 
-        state->history_position--;
-        strcpy(state->current_line, state->history[state->history_position]);
-        state->line_position = strlen(state->history[state->history_position]) - 1;
+        state->history_position++;
+
+        strcpy(state->current_line, queue_get(state->history, state->history_position));
         state->line_length = strlen(state->current_line);
+        state->line_position = state->line_length - 1;
 
         redraw_line(state);
     }
 }
 
 void handle_down_arrow(repl_state_t *state) {
-    if (state->history[state->history_position + 1] != NULL && state->history[state->history_position] != NULL) {
-        state->history_position++;
-        strcpy(state->current_line, state->history[state->history_position]);
+    if (state->history_position > 0) {
+        state->history_position--;
+        strcpy(state->current_line, queue_get(state->history, state->history_position));
 
-        state->line_position = strlen(state->history[state->history_position]) - 1;
         state->line_length = strlen(state->current_line);
-    } else if (state->history[state->history_position + 1] == NULL && state->history[state->history_position] != NULL) {
-        state->history_position++;
+        state->line_position = state->line_length - 1;
+        redraw_line(state);
+    } else if (state->history_position == 0) {
+        state->history_position--;
         strcpy(state->current_line, state->saved_line);
 
         state->line_position = (int)strlen(state->saved_line) - 1;
-        state->line_length = strlen(state->current_line);  
+        state->line_length = strlen(state->current_line);
+        redraw_line(state); 
     }
-
-    redraw_line(state);
 }
 
 void handle_right_arrow(repl_state_t *state) {
