@@ -14,6 +14,7 @@ queue_t *create_queue(int cap) {
     queue->buffer = malloc(cap * sizeof(char *));
 
     if (!queue->buffer) {
+        free(queue);
         return NULL;
     }
 
@@ -42,6 +43,9 @@ int enqueue(queue_t *queue, char *value) {
         queue->head = queue->buffer;
     }
 
+    if (queue->size != queue->capacity) {
+        free(*queue->head);
+    }
     *queue->head = malloc(strlen(value) + 1);
 
     if (!*queue->head) {
