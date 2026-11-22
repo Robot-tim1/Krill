@@ -53,7 +53,8 @@ void krill_loop(void) {
         .prompt = NULL,
         .line_position = -1,
         .history_position = -1,
-        .line_length = 0
+        .line_length = 0,
+        .secondary = false
     };
 
     do {  

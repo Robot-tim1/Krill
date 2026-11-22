@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 typedef struct Queue queue_t;
 
 typedef struct ReplState {
@@ -11,6 +13,7 @@ typedef struct ReplState {
     int line_position;
     int history_position;
     int line_length;
+    bool secondary;
 } repl_state_t;
 
 char *krill_read_line(repl_state_t *state);

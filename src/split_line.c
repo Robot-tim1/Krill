@@ -46,6 +46,7 @@ void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
     char *temp = repl_state->prompt;
     repl_state->prompt = "> ";
+    repl_state->secondary = true;
 
     while (state->is_double_quoted || state->is_single_quoted) {
         line = krill_read_line(repl_state);
@@ -53,6 +54,7 @@ void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
         free(line);
     }
 
+    repl_state->secondary = false;
     repl_state->prompt = temp;
 }
 

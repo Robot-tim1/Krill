@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "history_queue.h"
 
@@ -37,11 +38,11 @@ int enqueue(queue_t *queue, char *value) {
         return 1;
     }
 
-    int was_incremented = 0;
+    bool was_incremented = false;
     queue->head++;
     if (queue->size != queue->capacity) {
         queue->size++;
-        was_incremented = 1;
+        was_incremented = true;
     }
 
     char *temp = malloc(strlen(value) + 1);
@@ -65,6 +66,22 @@ int enqueue(queue_t *queue, char *value) {
 
     strcpy(*queue->head, value);
 
+    return 1;
+}
+
+int append_latest(queue_t *queue, char *value) {
+    if (value[0] == '\0') {
+        return 1;
+    }
+    
+    char *temp = realloc(*queue->head, strlen(*queue->head) + strlen(value) + 1);
+
+    if (!temp) {
+        return 0;
+    }
+
+    *queue->head = temp;
+    strcat(*queue->head, value);
     return 1;
 }
 
