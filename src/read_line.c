@@ -177,8 +177,8 @@ void handle_down_arrow(repl_state_t *state) {
         state->history_position--;
         strcpy(state->current_line, state->saved_line);
 
-        state->line_position = (int)strlen(state->saved_line) - 1;
         state->line_length = strlen(state->current_line);
+        state->line_position = state->line_length - 1;
         redraw_line(state); 
     }
 }
