@@ -49,3 +49,16 @@ void enqueue(queue_t *queue, char *value) {
         queue->tail = queue->buffer;
     }
 }
+
+char *queue_get(queue_t *queue, int index) {
+    if (!queue->size || index >= queue->size) {
+        return NULL;
+    }
+
+    if (queue->head - index >= queue->buffer) {
+        return *(queue->head - index);
+    }
+
+    index = (-index % queue->size) + queue->size;
+    return *(queue->head + index);
+}
