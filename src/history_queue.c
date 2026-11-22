@@ -37,31 +37,43 @@ int enqueue(queue_t *queue, char *value) {
         return 1;
     }
 
+    int was_incremented = 0;
     queue->head++;
+    if (queue->size != queue->capacity) {
+        queue->size++;
+        was_incremented = 1;
+    }
+
+    char *temp = malloc(strlen(value) + 1);
+
+    if (!temp) {
+        if (queue->head != queue->buffer) {
+            queue->head--;
+        }
+        if (was_incremented) {
+            queue->size--;
+        }
+        return 0;
+    }
 
     if (queue->buffer + queue->capacity == queue->head) {
         queue->head = queue->buffer;
     }
 
-    if (queue->size != queue->capacity) {
+    if (queue->size == queue->capacity && !was_incremented) {
         free(*queue->head);
     }
-    *queue->head = malloc(strlen(value) + 1);
-
-    if (!*queue->head) {
-        return 0;
-    }
+    *queue->head = temp;
 
     strcpy(*queue->head, value);
-    if (queue->size != queue->capacity) {
-        queue->size++;
-    }
 
     return 1;
 }
 
 char *queue_get(queue_t *queue, int index) { 
-    if (queue->head - index >= queue->buffer) {
+    int head_index = (int)(queue->head - queue->buffer);
+
+    if (head_index - index >= 0) {
         return *(queue->head - index);
     }
 
