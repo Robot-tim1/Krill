@@ -77,6 +77,6 @@ char *queue_get(queue_t *queue, int index) {
         return *(queue->head - index);
     }
 
-    index = (-index % queue->size) + queue->size;
+    index = (-index % queue->capacity) + queue->capacity;
     return *(queue->head + index);
 }
