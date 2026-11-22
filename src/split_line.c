@@ -5,31 +5,31 @@
 #include "split_line.h"
 #include "read_line.h"
 
-#define LSH_TOK_BUFSIZE 64
+#define TOK_BUFSIZE 64
 
-char **lsh_split_line(const char *line, repl_state_t *repl_state) {
-    char **tokens = malloc(LSH_TOK_BUFSIZE * sizeof(char *));
+char **krill_split_line(const char *line, repl_state_t *repl_state) {
+    char **tokens = malloc(TOK_BUFSIZE * sizeof(char *));
 
     if (!tokens) {
-        fprintf(stderr, "lsh: allocation error\n");
+        fprintf(stderr, "Krill: allocation error\n");
         return NULL;
     }
 
     token_state_t state = {
             .token = NULL,
             .tokens = tokens,
-            .token_bufsize = LSH_TOK_BUFSIZE,
-            .tokens_bufsize = LSH_TOK_BUFSIZE,
+            .token_bufsize = TOK_BUFSIZE,
+            .tokens_bufsize = TOK_BUFSIZE,
             .token_position = 0,
             .word_position = 0,
             .is_double_quoted = 0,
             .is_single_quoted = 0
     };
 
-    lsh_parse_line(&state, line);
+    krill_parse_line(&state, line);
 
     if (state.is_double_quoted || state.is_single_quoted) {
-        lsh_handle_quotes(&state, repl_state);
+        krill_handle_quotes(&state, repl_state);
     }
 
     if (state.token) {
@@ -42,21 +42,21 @@ char **lsh_split_line(const char *line, repl_state_t *repl_state) {
     return state.tokens;
 }
 
-void lsh_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
+void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
     char *temp = repl_state->prompt;
     repl_state->prompt = "> ";
 
     while (state->is_double_quoted || state->is_single_quoted) {
-        line = lsh_read_line(repl_state);
-        lsh_parse_line(state, line);
+        line = krill_read_line(repl_state);
+        krill_parse_line(state, line);
         free(line);
     }
 
     repl_state->prompt = temp;
 }
 
-void lsh_parse_line(token_state_t *state, const char *line) {
+void krill_parse_line(token_state_t *state, const char *line) {
     int line_position = 0;
 
     while (line[line_position] != '\0') {
@@ -95,25 +95,25 @@ void lsh_parse_line(token_state_t *state, const char *line) {
             state->word_position++;
 
             if (state->word_position + 1 >= state->tokens_bufsize) {
-                state->tokens_bufsize += LSH_TOK_BUFSIZE;
+                state->tokens_bufsize += TOK_BUFSIZE;
                 char **temp = realloc(state->tokens, state->tokens_bufsize * sizeof(char *));
 
                 if (!temp) {
-                    fprintf(stderr, "lsh: allocation error\n");
+                    fprintf(stderr, "Krill: allocation error\n");
                     exit(EXIT_FAILURE);
                 }
                 state->tokens = temp;
             }
 
             state->token = NULL;
-            state->token_bufsize = LSH_TOK_BUFSIZE;
+            state->token_bufsize = TOK_BUFSIZE;
             continue;
         }
 
         if (!state->token) {
             state->token = malloc(state->token_bufsize);
             if (!state->token) {
-                fprintf(stderr, "lsh: allocation error\n");
+                fprintf(stderr, "Krill: allocation error\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -123,11 +123,11 @@ void lsh_parse_line(token_state_t *state, const char *line) {
         state->token_position++;
 
         if (state->token_position + 1 >= state->token_bufsize) {
-            state->token_bufsize += LSH_TOK_BUFSIZE;
+            state->token_bufsize += TOK_BUFSIZE;
             char *temp = realloc(state->token, state->token_bufsize);
 
             if (!temp) {
-                fprintf(stderr, "lsh: allocation error\n");
+                fprintf(stderr, "Krill: allocation error\n");
                 exit(EXIT_FAILURE);
             }
             state->token = temp;

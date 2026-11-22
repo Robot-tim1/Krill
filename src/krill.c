@@ -5,7 +5,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 
-#include "lsh.h"
+#include "krill.h"
 #include "split_line.h"
 #include "commands.h"
 #include "read_line.h"
@@ -19,7 +19,7 @@
 #define RED     "\e[0;31m"
 #define RESET   "\e[0m"
 
-void lsh_loop(void) {
+void krill_loop(void) {
     char *line;
     char **args;
     int status = 1;
@@ -27,21 +27,21 @@ void lsh_loop(void) {
     char *home = getenv("HOME");
 
     if (gethostname(hostname, sizeof(hostname)) != 0) {
-        perror("lsh");
+        perror("Krill");
         return;
     }
 
     struct passwd *pw = getpwuid(geteuid());
 
     if (!pw) {
-        perror("lsh");
+        perror("Krill");
         return;
     }
 
     queue_t *history = create_queue(1024);
 
     if (!history) {
-        perror("lsh");
+        perror("Krill");
         return;
     }
 
@@ -59,7 +59,7 @@ void lsh_loop(void) {
     do {  
         char cwd[MAX_PATH];
         if (getcwd(cwd, sizeof(cwd)) == NULL) {
-            perror("lsh");
+            perror("Krill");
             return;
         }
         
@@ -74,24 +74,24 @@ void lsh_loop(void) {
             cwd_to_print = new_cwd;
         }
         if (asprintf(&repl_state.prompt, "%s%s@%s%s:%s%s%s$ ", RED, pw->pw_name, hostname, RESET, HRED, cwd_to_print, RESET) == -1) {
-            perror("lsh");
+            perror("Krill");
             return;
         }
         
-        line = lsh_read_line(&repl_state);
+        line = krill_read_line(&repl_state);
         if (!line) {
             free(repl_state.prompt);
             repl_state.prompt = NULL;
             continue;
         }
-        args = lsh_split_line(line, &repl_state);
+        args = krill_split_line(line, &repl_state);
         if (!args) {
             free(line);
             free(repl_state.prompt);
             repl_state.prompt = NULL;
             continue;
         }
-        status = lsh_execute(args);
+        status = krill_execute(args);
 
         free(line);
         for (int i = 0; args[i] != NULL; i++) {

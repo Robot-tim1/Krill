@@ -1,6 +1,6 @@
-#include "lsh.h"
+#include "krill.h"
 
 int main(void) {
-    lsh_loop();
+    krill_loop();
     return 0;
 }

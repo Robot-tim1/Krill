@@ -7,21 +7,21 @@
 #include "terminal_mode.h"
 #include "history_queue.h"
 
-#define LSH_RL_BUFSIZE 4096
+#define RL_BUFSIZE 4096
 #define CLEAR_LINE "\x1b[2K\r"
 
-char *lsh_read_line(repl_state_t *state) {
-    char *line = calloc(LSH_RL_BUFSIZE, sizeof(char));
+char *krill_read_line(repl_state_t *state) {
+    char *line = calloc(RL_BUFSIZE, sizeof(char));
 
     if (!line) {
-        fprintf(stderr, "\nlsh: allocation error\n");
+        fprintf(stderr, "\nKrill: allocation error\n");
         return NULL;
     }
 
-    char *saved_line = malloc(LSH_RL_BUFSIZE);
+    char *saved_line = malloc(RL_BUFSIZE);
 
     if (!saved_line) {
-        fprintf(stderr, "\nlsh: allocation error\n");
+        fprintf(stderr, "\nKrill: allocation error\n");
         free(line);
         return NULL;
     }
@@ -108,7 +108,7 @@ void reposition_cursor(repl_state_t *state) {
 }
 
 void handle_key_input(repl_state_t *state, char c) {
-    if (c >= 32 && c <= 126 && state->line_length + 2 < LSH_RL_BUFSIZE) {
+    if (c >= 32 && c <= 126 && state->line_length + 2 < RL_BUFSIZE) {
         state->line_position++;
         state->line_length++;
 
@@ -136,6 +136,7 @@ void handle_backspace(repl_state_t *state) {
 char *handle_enter(repl_state_t *state) {
     if (strlen(state->current_line) != 0 && (!state->history->size || strcmp(queue_get(state->history, 0), state->current_line) != 0)) {
         if (enqueue(state->history, state->current_line) == 0) {
+            fprintf(stderr, "Krill: error saving command to history");
             return NULL;
         }
     }
