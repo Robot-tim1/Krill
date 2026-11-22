@@ -50,6 +50,9 @@ void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
 
     while (state->is_double_quoted || state->is_single_quoted) {
         line = krill_read_line(repl_state);
+        if (!line) {
+            continue;
+        }
         krill_parse_line(state, line);
         free(line);
     }
