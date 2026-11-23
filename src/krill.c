@@ -45,11 +45,13 @@ void krill_loop(void) {
         return;
     }
 
+    char yanked[4096] = {0};
+
     repl_state_t repl_state = {
         .history = history,
         .current_line = NULL,
         .saved_line = NULL,
-        .yanked_line = NULL,
+        .yanked_line = yanked,
         .prompt = NULL,
         .line_position = -1,
         .history_position = -1,

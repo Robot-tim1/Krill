@@ -75,6 +75,9 @@ char *krill_read_line(repl_state_t *state) {
             state->saved_line = NULL;
             
             exit(EXIT_SUCCESS);
+        case '\x19':
+            handle_ctrl_y(state);
+            break;
         case '\f':
             printf("\033[H\033[2J%s%s", state->prompt, state->current_line);
             fflush(stdout);
@@ -207,4 +210,23 @@ void handle_left_arrow(repl_state_t *state) {
         fputs("\x1b[D", stdout);
         fflush(stdout);
     }
+}
+
+void handle_ctrl_y(repl_state_t *state) {
+    if (state->yanked_line[0] == '\0') {
+        return;
+    }
+    size_t yanked_length = strlen(state->yanked_line);
+    state->line_position++;
+    state->line_length += yanked_length;
+
+    memmove(state->current_line + state->line_position + yanked_length, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
+    memcpy(state->current_line + state->line_position, state->yanked_line, yanked_length);
+    if (yanked_length > 1) {
+        state->line_position += yanked_length - 1;
+    }
+    state->current_line[state->line_length] = '\0';
+
+    redraw_line(state);
+    reposition_cursor(state);
 }
