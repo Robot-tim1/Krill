@@ -216,7 +216,12 @@ void handle_ctrl_y(repl_state_t *state) {
     if (state->yanked_line[0] == '\0') {
         return;
     }
-    size_t yanked_length = strlen(state->yanked_line);
+    
+    int yanked_length = strlen(state->yanked_line);
+    if (state->line_length + yanked_length + 2 >= RL_BUFSIZE) {
+        return;
+    }
+    
     state->line_position++;
     state->line_length += yanked_length;
 
