@@ -109,8 +109,8 @@ void redraw_line(repl_state_t *state) {
 void reposition_cursor(repl_state_t *state) {
     if (state->line_position != state->line_length - 1) {
         printf("\x1b[%dD", state->line_length - state->line_position - 1);
+        fflush(stdout);
     }
-    fflush(stdout);
 }
 
 void handle_key_input(repl_state_t *state, char c) {
