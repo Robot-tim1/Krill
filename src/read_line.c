@@ -78,6 +78,9 @@ char *krill_read_line(repl_state_t *state) {
         case '\x19':
             handle_ctrl_y(state);
             break;
+        case '\x15':
+            handle_ctrl_u(state);
+            break;
         case '\x0B':
             handle_ctrl_k(state);
             break;
@@ -234,6 +237,23 @@ void handle_ctrl_y(repl_state_t *state) {
         state->line_position += yanked_length - 1;
     }
     state->current_line[state->line_length] = '\0';
+
+    redraw_line(state);
+    reposition_cursor(state);
+}
+
+void handle_ctrl_u(repl_state_t *state) {
+    if (state->current_line[0] == '\0' || state->line_position == -1) {
+        return;
+    }
+
+    memcpy(state->yanked_line, state->current_line, state->line_position + 1);
+    state->yanked_line[state->line_position + 1] = '\0';
+
+    int length = strlen(state->current_line) - state->line_position - 1;
+    memmove(state->current_line, state->current_line + state->line_position + 1, length + 1);
+    state->line_position = -1;
+    state->line_length = length;
 
     redraw_line(state);
     reposition_cursor(state);
