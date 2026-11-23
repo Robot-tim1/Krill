@@ -78,6 +78,9 @@ char *krill_read_line(repl_state_t *state) {
         case '\x19':
             handle_ctrl_y(state);
             break;
+        case '\x0B':
+            handle_ctrl_k(state);
+            break;
         case '\f':
             printf("\033[H\033[2J%s%s", state->prompt, state->current_line);
             fflush(stdout);
@@ -234,4 +237,16 @@ void handle_ctrl_y(repl_state_t *state) {
 
     redraw_line(state);
     reposition_cursor(state);
+}
+
+void handle_ctrl_k(repl_state_t *state) {
+    if (state->current_line[0] == '\0' || state->line_position + 1 == state->line_length) {
+        return;
+    }
+    
+    strcpy(state->yanked_line, state->current_line + state->line_position + 1);
+    state->line_length = state->line_position + 1;
+    state->current_line[state->line_length] = '\0';
+
+    redraw_line(state);
 }
