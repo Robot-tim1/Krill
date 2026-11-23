@@ -102,4 +102,5 @@ void krill_loop(void) {
         free(repl_state.prompt);
         repl_state.prompt = NULL;
     } while (status);
+    free_queue(history);
 }

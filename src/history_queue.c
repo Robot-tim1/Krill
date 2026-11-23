@@ -26,6 +26,14 @@ queue_t *create_queue(int cap) {
     return queue;
 }
 
+void free_queue(queue_t *queue) {
+    for (int i = 0; i < queue->size; i++) {
+        free(queue->buffer[i]);
+    }
+    free(queue->buffer);
+    free(queue);
+}
+
 int enqueue(queue_t *queue, char *value) {
     if (queue->size == 0) {
         *queue->head = malloc(strlen(value) + 1);

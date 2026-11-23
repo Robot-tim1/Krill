@@ -11,3 +11,4 @@ queue_t *create_queue(int cap);
 int enqueue(queue_t *queue, char *value);
 int append_latest(queue_t *queue, char *value);
 char *queue_get(queue_t *queue, int index);
+void free_queue(queue_t *queue);
