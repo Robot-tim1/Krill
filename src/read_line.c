@@ -117,7 +117,7 @@ void reposition_cursor(repl_state_t *state) {
 }
 
 void handle_key_input(repl_state_t *state, char c) {
-    if (c >= 32 && c <= 126 && state->line_length + 2 < RL_BUFSIZE) {
+    if (c >= 32 && c <= 126 && state->line_length + 1 < RL_BUFSIZE) {
         state->line_position++;
         state->line_length++;
 
@@ -160,8 +160,7 @@ char *handle_enter(repl_state_t *state) {
     }
 
     state->line_position = state->line_length;
-    state->current_line[state->line_position] = '\n';
-    state->current_line[state->line_position + 1] = '\0';
+    state->current_line[state->line_position] = '\0';
     free(state->saved_line);
     state->saved_line = NULL;
             

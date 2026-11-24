@@ -48,12 +48,18 @@ void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
     repl_state->prompt = "> ";
     repl_state->secondary = true;
 
+    state->token[state->token_position] = '\n';
+    state->token_position++;
     while (state->is_double_quoted || state->is_single_quoted) {
         line = krill_read_line(repl_state);
         if (!line) {
             continue;
         }
         krill_parse_line(state, line);
+        if (state->is_double_quoted || state->is_single_quoted) {
+            state->token[state->token_position] = '\n';
+            state->token_position++;
+        }
         free(line);
     }
 
