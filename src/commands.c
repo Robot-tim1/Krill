@@ -28,15 +28,25 @@ int krill_execute(char ***commands) {
         return 1;
     }
 
+    int builtin = 0;
+
     for (int i = 0; commands[i] != NULL; i++) {
         char **args = commands[i];
         for (int j = 0; j < krill_num_builtins(); j++) {
             if (strcmp(args[0], builtin_str[j]) == 0) {
-                return (*builtin_func[j])(args);
+                builtin = 1;
+                if ((*builtin_func[j])(args) == 0) {
+                    return 0;
+                }
             }
         }
 
-        return krill_launch(args);
+        if (builtin) {
+            builtin = 0;
+            continue;
+        }
+
+        krill_launch(args);
     }
 
     return 1;
