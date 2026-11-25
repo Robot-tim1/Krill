@@ -23,20 +23,21 @@ int krill_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
 
-int krill_execute(char **args) {
-    int i;
-
-    if (args[0] == NULL) {
+int krill_execute(char ***commands) {
+    if (commands[0][0] == NULL) {
         return 1;
     }
 
-    for (i = 0; i < krill_num_builtins(); i++) {
-        if (strcmp(args[0], builtin_str[i]) == 0) {
-            return (*builtin_func[i])(args);
+    for (int i = 0; commands[i] != NULL; i++) {
+        char **args = commands[i];
+        for (int j = 0; j < krill_num_builtins(); j++) {
+            if (strcmp(args[0], builtin_str[j]) == 0) {
+                return (*builtin_func[j])(args);
+            }
         }
-    }
 
-    return krill_launch(args);
+        return krill_launch(args);
+    }
 }
 
 int krill_launch(char **args) {

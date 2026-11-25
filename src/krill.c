@@ -21,7 +21,7 @@
 
 void krill_loop(void) {
     char *line;
-    char **args;
+    char ***commands;
     int status = 1;
     char hostname[256];
     char *home = getenv("HOME");
@@ -87,20 +87,23 @@ void krill_loop(void) {
             repl_state.prompt = NULL;
             continue;
         }
-        args = krill_split_line(line, &repl_state);
-        if (!args) {
+        commands = krill_split_line(line, &repl_state);
+        if (!commands) {
             free(line);
             free(repl_state.prompt);
             repl_state.prompt = NULL;
             continue;
         }
-        status = krill_execute(args);
+        status = krill_execute(commands);
 
         free(line);
-        for (int i = 0; args[i] != NULL; i++) {
-            free(args[i]);
+        for (int i = 0; commands[i] != NULL; i++) {
+            for (int j = 0; commands[i][j] != NULL; j++) {
+                free(commands[i][j]);
+            }
+            free(commands[i]);
         }
-        free(args);
+        free(commands);
         free(repl_state.prompt);
         repl_state.prompt = NULL;
     } while (status);

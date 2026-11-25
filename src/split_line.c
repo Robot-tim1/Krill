@@ -7,7 +7,7 @@
 
 #define TOK_BUFSIZE 64
 
-char **krill_split_line(const char *line, repl_state_t *repl_state) {
+char ***krill_split_line(const char *line, repl_state_t *repl_state) {
     char **tokens = malloc(TOK_BUFSIZE * sizeof(char *));
 
     if (!tokens) {
@@ -15,13 +15,23 @@ char **krill_split_line(const char *line, repl_state_t *repl_state) {
         return NULL;
     }
 
+    char ***commands = malloc(TOK_BUFSIZE * sizeof(char **));
+
+    if (!commands) {
+        fprintf(stderr, "Krill: allocation error\n");
+        return NULL;
+    }
+
     token_state_t state = {
             .token = NULL,
             .tokens = tokens,
+            .commands = commands,
             .token_bufsize = TOK_BUFSIZE,
             .tokens_bufsize = TOK_BUFSIZE,
+            .command_bufsize = TOK_BUFSIZE,
             .token_position = 0,
             .word_position = 0,
+            .command_position = 0,
             .is_double_quoted = 0,
             .is_single_quoted = 0
     };
@@ -39,7 +49,9 @@ char **krill_split_line(const char *line, repl_state_t *repl_state) {
     }
 
     state.tokens[state.word_position] = NULL;
-    return state.tokens;
+    state.commands[state.command_position] = state.tokens;
+    state.commands[state.command_position+1] = NULL;
+    return state.commands;
 }
 
 void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
