@@ -38,6 +38,8 @@ int krill_execute(char ***commands) {
 
         return krill_launch(args);
     }
+
+    return 1;
 }
 
 int krill_launch(char **args) {
