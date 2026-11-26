@@ -151,7 +151,7 @@ char *handle_enter(repl_state_t *state) {
                 free(state->saved_line);
                 return NULL;
             }
-        } else if (state->add_space && state->line_position != -1) {
+        } else if (state->add_space && state->current_line[0] != '\0') {
             if (append_latest(state->history, " ") == 0) {
                 fprintf(stderr, "Krill: error saving command to history");
                 free(state->current_line);
