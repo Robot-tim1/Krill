@@ -109,13 +109,13 @@ void krill_parse_line(token_state_t *state, const char *line) {
             if (state->token_position == 0) {
                 continue;
             }
-            krill_handle_space(state);
+            handle_space(state);
             continue;
         }
 
         if (line[line_position] == '|' && !state->is_double_quoted && !state->is_single_quoted) {
             line_position++;
-            krill_handle_pipe(state);
+            handle_pipe(state);
             continue;
         }
 
@@ -144,7 +144,7 @@ void krill_parse_line(token_state_t *state, const char *line) {
     }
 }
 
-void krill_handle_space(token_state_t *state) {
+void handle_space(token_state_t *state) {
     state->token[state->token_position] = '\0';
     state->token_position = 0;
 
@@ -166,7 +166,7 @@ void krill_handle_space(token_state_t *state) {
     state->token_bufsize = TOK_BUFSIZE;
 }
 
-void krill_handle_pipe(token_state_t *state) {
+void handle_pipe(token_state_t *state) {
     if (state->token) {
         state->token[state->token_position] = '\0';
         state->tokens[state->word_position] = state->token;
