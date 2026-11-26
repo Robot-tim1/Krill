@@ -56,7 +56,9 @@ void krill_loop(void) {
         .line_position = -1,
         .history_position = -1,
         .line_length = 0,
-        .secondary = false
+        .secondary = false,
+        .add_newline = false,
+        .add_space = false
     };
 
     do {  

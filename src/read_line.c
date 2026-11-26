@@ -144,7 +144,22 @@ void handle_backspace(repl_state_t *state) {
 
 char *handle_enter(repl_state_t *state) {
     if (state->secondary) {
-        if (append_latest(state->history, "\n") == 0 || append_latest(state->history, state->current_line) == 0) {
+        if (state->add_newline) {
+            if (append_latest(state->history, "\n") == 0) {
+                fprintf(stderr, "Krill: error saving command to history");
+                free(state->current_line);
+                free(state->saved_line);
+                return NULL;
+            }
+        } else if (state->add_space && state->line_position != -1) {
+            if (append_latest(state->history, " ") == 0) {
+                fprintf(stderr, "Krill: error saving command to history");
+                free(state->current_line);
+                free(state->saved_line);
+                return NULL;
+            }
+        }
+        if (append_latest(state->history, state->current_line) == 0) {
             fprintf(stderr, "Krill: error saving command to history");
             free(state->current_line);
             free(state->saved_line);

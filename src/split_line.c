@@ -38,8 +38,22 @@ char ***krill_split_line(const char *line, repl_state_t *repl_state) {
 
     krill_parse_line(&state, line);
 
-    if (state.is_double_quoted || state.is_single_quoted) {
-        krill_continue_quotes(&state, repl_state);
+    if (state.is_double_quoted || state.is_single_quoted || (!state.token && state.word_position == 0 && state.command_position != 0)) {
+        char *temp = repl_state->prompt;
+        repl_state->prompt = "> ";
+        repl_state->secondary = true;
+        
+        while (state.is_double_quoted || state.is_single_quoted || (!state.token && state.word_position == 0 && state.command_position != 0)) {
+            if (state.is_double_quoted || state.is_single_quoted) {
+                krill_continue_quotes(&state, repl_state);
+            }
+            if (!state.token && state.word_position == 0 && state.command_position != 0) {
+                krill_continue_pipe(&state, repl_state);
+            }
+        }
+        
+        repl_state->secondary = false;
+        repl_state->prompt = temp;
     }
 
     if (state.token) {
@@ -56,9 +70,7 @@ char ***krill_split_line(const char *line, repl_state_t *repl_state) {
 
 void krill_continue_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
-    char *temp = repl_state->prompt;
-    repl_state->prompt = "> ";
-    repl_state->secondary = true;
+    repl_state->add_newline = true;
 
     state->token[state->token_position] = '\n';
     state->token_position++;
@@ -75,8 +87,23 @@ void krill_continue_quotes(token_state_t *state, repl_state_t *repl_state) {
         free(line);
     }
 
-    repl_state->secondary = false;
-    repl_state->prompt = temp;
+    repl_state->add_newline = false;
+}
+
+void krill_continue_pipe(token_state_t *state, repl_state_t *repl_state) {
+    char *line;
+    repl_state->add_space = true;
+
+    while (!state->token && state->word_position == 0 && state->command_position != 0) {
+        line = krill_read_line(repl_state);
+        if (!line) {
+            continue;
+        }
+        krill_parse_line(state, line);
+        free(line);
+    }
+
+    repl_state->add_space = false;
 }
 
 void krill_parse_line(token_state_t *state, const char *line) {

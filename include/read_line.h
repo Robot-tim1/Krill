@@ -14,6 +14,8 @@ typedef struct ReplState {
     int history_position;
     int line_length;
     bool secondary;
+    bool add_newline;
+    bool add_space;
 } repl_state_t;
 
 char *krill_read_line(repl_state_t *state);

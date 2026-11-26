@@ -19,5 +19,6 @@ typedef struct ReplState repl_state_t;
 char ***krill_split_line(const char *line, repl_state_t *repl_state);
 void krill_parse_line(token_state_t *state, const char *line);
 void krill_continue_quotes(token_state_t *state, repl_state_t *repl_state);
+void krill_continue_pipe(token_state_t *state, repl_state_t *repl_state);
 void handle_pipe(token_state_t *state);
 void handle_space(token_state_t *state);
