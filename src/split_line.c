@@ -136,8 +136,7 @@ void krill_parse_line(token_state_t *state, const char *line) {
             continue;
         }
 
-        // 39 is single quote ASCII number
-        if (line[line_position] == 39 && !state->is_double_quoted) {
+        if (line[line_position] == '\'' && !state->is_double_quoted) {
             if (state->is_single_quoted) {
                 state->is_single_quoted = 0;
                 if (state->token == NULL) {
