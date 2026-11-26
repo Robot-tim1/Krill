@@ -139,7 +139,7 @@ void krill_parse_line(token_state_t *state, const char *line) {
         if (line[line_position] == '\'' && !state->is_double_quoted) {
             if (state->is_single_quoted) {
                 state->is_single_quoted = 0;
-                if (state->token == NULL) {
+                if (!state->token) {
                     state->token = malloc(state->token_bufsize);
                     if (!state->token) {
                         fprintf(stderr, "Krill: allocation error\n");
@@ -156,7 +156,7 @@ void krill_parse_line(token_state_t *state, const char *line) {
 
         if (isspace(line[line_position]) && !state->is_double_quoted && !state->is_single_quoted) {
             line_position++;
-            if (state->token_position == 0) {
+            if (!state->token) {
                 continue;
             }
             add_token(state);
