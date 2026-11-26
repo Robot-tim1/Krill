@@ -39,7 +39,7 @@ char ***krill_split_line(const char *line, repl_state_t *repl_state) {
     krill_parse_line(&state, line);
 
     if (state.is_double_quoted || state.is_single_quoted) {
-        krill_handle_quotes(&state, repl_state);
+        krill_continue_quotes(&state, repl_state);
     }
 
     if (state.token) {
@@ -54,7 +54,7 @@ char ***krill_split_line(const char *line, repl_state_t *repl_state) {
     return state.commands;
 }
 
-void krill_handle_quotes(token_state_t *state, repl_state_t *repl_state) {
+void krill_continue_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
     char *temp = repl_state->prompt;
     repl_state->prompt = "> ";
@@ -105,77 +105,17 @@ void krill_parse_line(token_state_t *state, const char *line) {
         }
 
         if (isspace(line[line_position]) && !state->is_double_quoted && !state->is_single_quoted) {
+            line_position++;
             if (state->token_position == 0) {
-                line_position++;
                 continue;
             }
-
-            state->token[state->token_position] = '\0';
-            line_position++;
-            state->token_position = 0;
-
-            state->tokens[state->word_position] = state->token;
-            state->word_position++;
-
-            if (state->word_position + 1 >= state->tokens_bufsize) {
-                state->tokens_bufsize += TOK_BUFSIZE;
-                char **temp = realloc(state->tokens, state->tokens_bufsize * sizeof(char *));
-
-                if (!temp) {
-                    fprintf(stderr, "Krill: allocation error\n");
-                    exit(EXIT_FAILURE);
-                }
-                state->tokens = temp;
-            }
-
-            state->token = NULL;
-            state->token_bufsize = TOK_BUFSIZE;
+            krill_handle_space(state);
             continue;
         }
 
         if (line[line_position] == '|' && !state->is_double_quoted && !state->is_single_quoted) {
             line_position++;
-            if (state->token) {
-                state->token[state->token_position] = '\0';
-                state->tokens[state->word_position] = state->token;
-                state->word_position++;
-                state->token = NULL;
-                state->token_bufsize = TOK_BUFSIZE;
-                state->token_position = 0;
-            }
-
-            state->tokens[state->word_position] = NULL;
-
-            if (state->tokens[0] == NULL) {
-                fprintf(stderr, "Krill: syntax error near unexpected token `|'\n");
-                exit(EXIT_FAILURE);
-            }
-
-            state->commands[state->command_position] = state->tokens;
-            state->command_position++;
-
-            if (state->command_position + 1 >= state->command_bufsize) {
-                state->command_bufsize += TOK_BUFSIZE;
-                char ***temp = realloc(state->commands, state->command_bufsize * sizeof(char **));
-
-                if (!temp) {
-                    fprintf(stderr, "Krill: allocation error\n");
-                    exit(EXIT_FAILURE);
-                }
-                state->commands = temp;
-            }
-
-            state->tokens_bufsize = TOK_BUFSIZE;
-            state->word_position = 0;
-
-            char **tokens = malloc(state->tokens_bufsize * sizeof(char *));
-
-            if (!tokens) {
-                fprintf(stderr, "Krill: allocation error\n");
-                exit(EXIT_FAILURE);
-            }
-
-            state->tokens = tokens;
+            krill_handle_pipe(state);
             continue;
         }
 
@@ -202,4 +142,70 @@ void krill_parse_line(token_state_t *state, const char *line) {
             state->token = temp;
         }
     }
+}
+
+void krill_handle_space(token_state_t *state) {
+    state->token[state->token_position] = '\0';
+    state->token_position = 0;
+
+    state->tokens[state->word_position] = state->token;
+    state->word_position++;
+
+    if (state->word_position + 1 >= state->tokens_bufsize) {
+        state->tokens_bufsize += TOK_BUFSIZE;
+        char **temp = realloc(state->tokens, state->tokens_bufsize * sizeof(char *));
+
+        if (!temp) {
+            fprintf(stderr, "Krill: allocation error\n");
+            exit(EXIT_FAILURE);
+        }
+        state->tokens = temp;
+    }
+
+    state->token = NULL;
+    state->token_bufsize = TOK_BUFSIZE;
+}
+
+void krill_handle_pipe(token_state_t *state) {
+    if (state->token) {
+        state->token[state->token_position] = '\0';
+        state->tokens[state->word_position] = state->token;
+        state->word_position++;
+        state->token = NULL;
+        state->token_bufsize = TOK_BUFSIZE;
+        state->token_position = 0;
+    }
+
+    state->tokens[state->word_position] = NULL;
+
+    if (state->tokens[0] == NULL) {
+        fprintf(stderr, "Krill: syntax error near unexpected token `|'\n");
+        exit(EXIT_FAILURE);
+    }
+
+    state->commands[state->command_position] = state->tokens;
+    state->command_position++;
+
+    if (state->command_position + 1 >= state->command_bufsize) {
+        state->command_bufsize += TOK_BUFSIZE;
+        char ***temp = realloc(state->commands, state->command_bufsize * sizeof(char **));
+
+        if (!temp) {
+            fprintf(stderr, "Krill: allocation error\n");
+            exit(EXIT_FAILURE);
+        }
+        state->commands = temp;
+    }
+
+    state->tokens_bufsize = TOK_BUFSIZE;
+    state->word_position = 0;
+
+    char **tokens = malloc(state->tokens_bufsize * sizeof(char *));
+
+    if (!tokens) {
+        fprintf(stderr, "Krill: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    state->tokens = tokens;
 }
