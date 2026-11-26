@@ -72,6 +72,14 @@ void krill_continue_quotes(token_state_t *state, repl_state_t *repl_state) {
     char *line;
     repl_state->add_newline = true;
 
+    if (!state->token) {
+        state->token = malloc(state->token_bufsize);
+        if (!state->token) {
+            fprintf(stderr, "Krill: allocation error\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     state->token[state->token_position] = '\n';
     state->token_position++;
     while (state->is_double_quoted || state->is_single_quoted) {
