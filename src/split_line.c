@@ -121,6 +121,14 @@ void krill_parse_line(token_state_t *state, const char *line) {
         if (line[line_position] == '"' && !state->is_single_quoted) {
             if (state->is_double_quoted) {
                 state->is_double_quoted = 0;
+                if (state->token == NULL) {
+                    state->token = malloc(state->token_bufsize);
+                    if (!state->token) {
+                        fprintf(stderr, "Krill: allocation error\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    add_token(state);
+                }
             } else {
                 state->is_double_quoted = 1;
             }
@@ -132,6 +140,14 @@ void krill_parse_line(token_state_t *state, const char *line) {
         if (line[line_position] == 39 && !state->is_double_quoted) {
             if (state->is_single_quoted) {
                 state->is_single_quoted = 0;
+                if (state->token == NULL) {
+                    state->token = malloc(state->token_bufsize);
+                    if (!state->token) {
+                        fprintf(stderr, "Krill: allocation error\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    add_token(state);
+                }
             } else {
                 state->is_single_quoted = 1;
             }
@@ -144,7 +160,7 @@ void krill_parse_line(token_state_t *state, const char *line) {
             if (state->token_position == 0) {
                 continue;
             }
-            handle_space(state);
+            add_token(state);
             continue;
         }
 
@@ -179,10 +195,9 @@ void krill_parse_line(token_state_t *state, const char *line) {
     }
 }
 
-void handle_space(token_state_t *state) {
+void add_token(token_state_t *state) {
     state->token[state->token_position] = '\0';
-    state->token_position = 0;
-
+    
     state->tokens[state->word_position] = state->token;
     state->word_position++;
 
@@ -198,17 +213,13 @@ void handle_space(token_state_t *state) {
     }
 
     state->token = NULL;
+    state->token_position = 0;
     state->token_bufsize = TOK_BUFSIZE;
 }
 
 void handle_pipe(token_state_t *state) {
     if (state->token) {
-        state->token[state->token_position] = '\0';
-        state->tokens[state->word_position] = state->token;
-        state->word_position++;
-        state->token = NULL;
-        state->token_bufsize = TOK_BUFSIZE;
-        state->token_position = 0;
+        add_token(state);
     }
 
     state->tokens[state->word_position] = NULL;
