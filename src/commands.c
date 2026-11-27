@@ -28,10 +28,20 @@ int krill_execute(char ***commands) {
         return 1;
     }
 
+    int i;
+    if (commands[1] == NULL) {
+        char **args = commands[0];
+        for (i = 0; i < krill_num_builtins(); i++) {
+            if (strcmp(args[0], builtin_str[i]) == 0) {
+                return (*builtin_func[i])(args);
+            }
+        }
+    }
+
     int builtin = 0;
     int in_fd = STDIN_FILENO;
 
-    for (int i = 0; commands[i] != NULL; i++) {
+    for (i = 0; commands[i] != NULL; i++) {
         char **args = commands[i];
         int fd[2];
         if (pipe(fd) == -1) {
