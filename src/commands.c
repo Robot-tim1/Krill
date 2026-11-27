@@ -29,9 +29,16 @@ int krill_execute(char ***commands) {
     }
 
     int builtin = 0;
+    int in_fd = STDIN_FILENO;
 
     for (int i = 0; commands[i] != NULL; i++) {
         char **args = commands[i];
+        int fd[2];
+        if (pipe(fd) == -1) {
+            perror("Krill");
+            exit(EXIT_FAILURE);
+        }
+
         for (int j = 0; j < krill_num_builtins(); j++) {
             if (strcmp(args[0], builtin_str[j]) == 0) {
                 builtin = 1;
@@ -46,29 +53,47 @@ int krill_execute(char ***commands) {
             continue;
         }
 
-        krill_launch(args);
+        krill_launch(args, fd, &in_fd, commands[i+1] == NULL);
+    }
+
+    close(in_fd);
+
+    for (int i = 0; commands[i] != NULL; i++) {
+        wait(NULL);
     }
 
     return 1;
 }
 
-int krill_launch(char **args) {
-    pid_t pid;
-    int status;
-
-    pid = fork();
+int krill_launch(char **args, int *fd, int *in_fd, int is_last_command) {
+    pid_t pid = fork();
     if (pid == 0) {
+        if (*in_fd != STDIN_FILENO) {
+            dup2(*in_fd, STDIN_FILENO);
+            close(*in_fd);
+        }
+
+        if (!is_last_command) {
+            dup2(fd[1], STDOUT_FILENO);
+        }
+
+        close(fd[0]);
+        close(fd[1]);
+        
         if (execvp(args[0], args) == -1) {
             perror("Krill");
         }
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
         perror("Krill");
-    } else {
-        do {
-            waitpid(pid, &status, WUNTRACED);
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
+
+    if (*in_fd != STDIN_FILENO) {
+        close(*in_fd);
+    }
+
+    *in_fd = fd[0];
+    close(fd[1]);
     
     return 1;
 }
