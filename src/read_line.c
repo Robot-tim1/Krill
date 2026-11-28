@@ -262,8 +262,8 @@ void handle_ctrl_y(repl_state_t *state) {
     }
     
     int yanked_length = strlen(state->yanked_line);
-    if (state->line_length + yanked_length + 2 >= RL_BUFSIZE) {
-        return;
+    while (state->line_length + yanked_length + 2 >= state->line_bufsize) {
+        resize_line_buffer(state);
     }
     
     state->line_position++;
