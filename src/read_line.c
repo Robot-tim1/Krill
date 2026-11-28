@@ -11,14 +11,16 @@
 #define CLEAR_LINE "\x1b[2K\r"
 
 char *krill_read_line(repl_state_t *state) {
-    char *line = calloc(RL_BUFSIZE, sizeof(char));
+    state->line_bufsize = RL_BUFSIZE;
+    
+    char *line = calloc(state->line_bufsize, sizeof(char));
 
     if (!line) {
         fprintf(stderr, "\nKrill: allocation error\n");
         return NULL;
     }
 
-    char *saved_line = malloc(RL_BUFSIZE);
+    char *saved_line = malloc(state->line_bufsize);
 
     if (!saved_line) {
         fprintf(stderr, "\nKrill: allocation error\n");
@@ -116,10 +118,28 @@ void reposition_cursor(repl_state_t *state) {
     }
 }
 
+void resize_line_buffer(repl_state_t *state) {
+    state->line_bufsize *= 2;
+    char *temp = realloc(state->current_line, state->line_bufsize);
+    char *temp2 = realloc(state->saved_line, state->line_bufsize);
+
+    if (!temp || !temp2) {
+        fprintf(stderr, "Krill: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    state->current_line = temp;
+    state->saved_line = temp2;
+}
+
 void handle_key_input(repl_state_t *state, char c) {
-    if (c >= 32 && c <= 126 && state->line_length + 1 < RL_BUFSIZE) {
+    if (c >= 32 && c <= 126) {
         state->line_position++;
         state->line_length++;
+
+        if (state->line_length + 1 >= state->line_bufsize) {
+            resize_line_buffer(state);
+        }
 
         memmove(state->current_line + state->line_position + 1, state->current_line + state->line_position, strlen(state->current_line) - state->line_position + 1);
         state->current_line[state->line_position] = c;
@@ -189,8 +209,12 @@ void handle_up_arrow(repl_state_t *state) {
         }
 
         state->history_position++;
+        char *history_line = queue_get(state->history, state->history_position);
+        while ((int)strlen(history_line) + 1 >= state->line_bufsize) {
+            resize_line_buffer(state);
+        }
 
-        strcpy(state->current_line, queue_get(state->history, state->history_position));
+        strcpy(state->current_line, history_line);
         state->line_length = strlen(state->current_line);
         state->line_position = state->line_length - 1;
 
