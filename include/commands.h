@@ -1,6 +1,8 @@
 #pragma once
 
-int krill_launch(char **args, int *fd, int *in_fd, int is_last_command);
+#include <stdbool.h>
+
+int krill_launch(char **args, int *fd, int *in_fd, bool is_last_command, bool is_builtin);
 int krill_execute(char ***commands);
 int krill_cd(char **args);
 int krill_help(char **args);
